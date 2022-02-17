@@ -1366,6 +1366,14 @@
   resolved "https://registry.yarnpkg.com/@types/prop-types/-/prop-types-15.7.4.tgz#fcf7205c25dff795ee79af1e30da2c9790808f11"
   integrity sha512-rZ5drC/jWjrArrS8BR6SIr4cWpW09RNTYt9AMZo3Jwwif+iacXAqgVjm0B0Bv/S1jhDXKHqRVNCbACkJ89RAnQ==
 
+"@types/react-native-loading-spinner-overlay@^0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@types/react-native-loading-spinner-overlay/-/react-native-loading-spinner-overlay-0.5.3.tgz#babb9a30fa4fb6abac1dae057209a891208c6dcf"
+  integrity sha512-TP6//QhdBEUQT0sB9iG3+a+YKsMzP4/MJNNxSyfWsbdDTbBnO0lD9ksXdwBI5KY91r8gTmBE7PwRS+eEazZpxg==
+  dependencies:
+    "@types/react" "*"
+    "@types/react-native" "*"
+
 "@types/react-native-snap-carousel@^3.8.5":
   version "3.8.5"
   resolved "https://registry.yarnpkg.com/@types/react-native-snap-carousel/-/react-native-snap-carousel-3.8.5.tgz#5b3cb208119e3599d5537b5fc83653a155c6275d"
@@ -5598,6 +5606,16 @@ react-native-codegen@^0.0.8:
     flow-parser "^0.121.0"
     jscodeshift "^0.11.0"
     nullthrows "^1.1.1"
+
+react-native-loading-spinner-overlay@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/react-native-loading-spinner-overlay/-/react-native-loading-spinner-overlay-3.0.0.tgz#20df946b2d6a70a6e957a74473200ff660732e56"
+  integrity sha512-SmRCmfY795/Jxm9JHoyE0I6ry9uBT7m/RYAPNm0vlfZr9dz39HlzIt4h0MvcZvgSmUjEkHm6DzWnuWSO1yKr4A==
+
+react-native-safe-area-context@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-3.4.0.tgz#b751f492a7f7470bccb09f1a11ccc276a3c5fe98"
+  integrity sha512-kmzSK8L9LX+1rF6+qPBZR0kjGn5rE0IHNHL4px/lNwyxA+0siekTkCG+BlzbBy4V3yKeLzQ+UxgT9mEtDHs/Tg==
 
 react-native-snap-carousel@^3.9.1:
   version "3.9.1"

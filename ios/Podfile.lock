@@ -272,6 +272,8 @@ PODS:
   - React-jsinspector (0.67.2)
   - React-logger (0.67.2):
     - glog
+  - react-native-safe-area-context (3.4.0):
+    - React-Core
   - react-native-video (5.2.0):
     - React-Core
     - react-native-video/Video (= 5.2.0)
@@ -388,6 +390,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
+  - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-video (from `../node_modules/react-native-video`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
@@ -455,6 +458,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
+  react-native-safe-area-context:
+    :path: "../node_modules/react-native-safe-area-context"
   react-native-video:
     :path: "../node_modules/react-native-video"
   React-perflogger:
@@ -515,6 +520,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 52beb652bbc61201bd70cbe4f0b8edb607e8da4f
   React-jsinspector: 595f76eba2176ebd8817a1fffd47b84fbdab9383
   React-logger: 23de8ea0f44fa00ee77e96060273225607fd4d78
+  react-native-safe-area-context: f4f7cc09d81ae2d39dfd13e764d718969af07080
   react-native-video: a4c2635d0802f983594b7057e1bce8f442f0ad28
   React-perflogger: 3c9bb7372493e49036f07a82c44c8cf65cbe88db
   React-RCTActionSheet: 052606483045a408693aa7e864410b4a052f541a

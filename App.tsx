@@ -1,36 +1,61 @@
-import React, {useRef, useState} from 'react';
-import {Dimensions, SafeAreaView, StyleSheet, View} from 'react-native';
+import React, {useCallback, useRef, useState} from 'react';
+import {Dimensions, StyleSheet, Text, View} from 'react-native';
+import {SafeAreaInsetsContext} from 'react-native-safe-area-context';
 import Carousel from 'react-native-snap-carousel';
 import Video, {LoadError, OnBufferData} from 'react-native-video';
+import Spinner from 'react-native-loading-spinner-overlay';
 
-const carouselItems = [
+type VideoItem = {
+  id: number;
+  url: string;
+};
+
+const carouselItems: VideoItem[] = [
+  // HLS
   {
     id: 1,
     url: 'https://aiapoc-aase.streaming.media.azure.net/7705433b-ae8c-4393-84f4-d92d83f2c208/VID_20220130_123824.ism/manifest(format=m3u8-aapl)',
   },
   {
     id: 2,
-    url: 'https://video-previews.elements.envatousercontent.com/h264-video-previews/1877e986-9742-11e3-bf9f-005056926836/6885911.mp4',
+    url: 'https://aiapoc-aase.streaming.media.azure.net/7705433b-ae8c-4393-84f4-d92d83f2c208/VID_20220130_123824.ism/manifest(format=m3u8-cmaf)',
   },
+  // Dash
   {
     id: 3,
-    url: 'https://video-previews.elements.envatousercontent.com/files/620ce13c-890e-48fa-a6a7-43cbdea227a7/video_preview_h264.mp4',
+    url: 'https://aiapoc-aase.streaming.media.azure.net/7705433b-ae8c-4393-84f4-d92d83f2c208/VID_20220130_123824.ism/manifest(format=mpd-time-csf)',
   },
   {
     id: 4,
-    url: 'https://video-previews.elements.envatousercontent.com/files/abeba0b0-91b8-4a25-91fb-65b006bb2d9e/video_preview_h264.mp4',
+    url: 'https://aiapoc-aase.streaming.media.azure.net/7705433b-ae8c-4393-84f4-d92d83f2c208/VID_20220130_123824.ism/manifest(format=mpd-time-cmaf)',
   },
+  // SmoothStreaming
   {
     id: 5,
-    url: 'https://video-previews.elements.envatousercontent.com/files/99f2bf4e-f4f8-493b-84db-a9d3719e55d6/video_preview_h264.mp4',
+    url: 'https://aiapoc-aase.streaming.media.azure.net/7705433b-ae8c-4393-84f4-d92d83f2c208/VID_20220130_123824.ism/manifest',
   },
+  // HLS
   {
     id: 6,
-    url: 'https://video-previews.elements.envatousercontent.com/h264-video-previews/3a084720-2ddc-42e2-b185-0bf00c01ffad/12516197.mp4',
+    url: 'https://aiapoc-aase.streaming.media.azure.net/ab4a57df-80bb-46ec-b3cb-55664ac57329/VID_20220208_161937.ism/manifest(format=m3u8-aapl)',
   },
   {
     id: 7,
-    url: 'https://video-previews.elements.envatousercontent.com/h264-video-previews/dd4e87a3-5cc5-42d3-a0d1-4e50698c8d5d/8794322.mp4',
+    url: 'https://aiapoc-aase.streaming.media.azure.net/ab4a57df-80bb-46ec-b3cb-55664ac57329/VID_20220208_161937.ism/manifest(format=m3u8-cmaf)',
+  },
+  // Dash
+  {
+    id: 8,
+    url: 'https://aiapoc-aase.streaming.media.azure.net/ab4a57df-80bb-46ec-b3cb-55664ac57329/VID_20220208_161937.ism/manifest(format=mpd-time-csf)',
+  },
+  {
+    id: 9,
+    url: 'https://aiapoc-aase.streaming.media.azure.net/ab4a57df-80bb-46ec-b3cb-55664ac57329/VID_20220208_161937.ism/manifest(format=mpd-time-cmaf)',
+  },
+  // SmoothStreaming
+  {
+    id: 10,
+    url: 'https://aiapoc-aase.streaming.media.azure.net/ab4a57df-80bb-46ec-b3cb-55664ac57329/VID_20220208_161937.ism/manifest',
   },
 ];
 
@@ -38,56 +63,127 @@ const App = () => {
   const videoPlayer = useRef<Video>(null);
   const carousel = useRef<Carousel<string>>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [isLoadingIndex, setIdLoadingIndex] = useState<boolean[]>([]);
+  const [errors, setErrors] = useState<boolean[]>([]);
 
   const onBuffer = (e: OnBufferData) => {
     console.log('onBuffer', e);
   };
-  const videoError = (e: LoadError) => {
-    console.log('videoError', e);
-  };
+  const videoError = useCallback(
+    (e: LoadError, index: number) => {
+      console.log('videoError -> index', index, e);
+      const cloneErrors = [...errors];
+      cloneErrors[index] = true;
+      setErrors(cloneErrors);
+    },
+    [errors],
+  );
+
+  const handleProgress = useCallback(data => {
+    console.log('handleProgress -> data', data);
+  }, []);
+
+  const handleOnload = useCallback(
+    (data, index) => {
+      console.log('handleOnload -> data', data);
+      const cloneIsLoadingIndex = [...isLoadingIndex];
+      cloneIsLoadingIndex[index] = false;
+      setIdLoadingIndex(cloneIsLoadingIndex);
+    },
+    [isLoadingIndex],
+  );
+
+  const handleOnloadStart = useCallback(
+    (index: number) => {
+      console.log('handleOnloadStart -> index', index);
+      const cloneIsLoadingIndex = [...isLoadingIndex];
+      cloneIsLoadingIndex[index] = true;
+      setIdLoadingIndex(cloneIsLoadingIndex);
+    },
+    [isLoadingIndex],
+  );
+
+  const handleOnloadEnd = useCallback(() => {
+    console.log('handleOnloadEnd -> data');
+  }, []);
 
   const tmp = Dimensions.get('window');
   const {width, height} = tmp;
-
   const renderItem = ({item, index}) => {
+    const isLoading = isLoadingIndex[index];
+    const isError = errors[index];
+
+    console.log(
+      'renderItem -> index',
+      index,
+      isLoading,
+      isError,
+      isLoading && !isError,
+    );
+
     return (
-      <Video
-        key={item.id}
-        source={{
-          uri: item.url,
-        }}
-        ref={videoPlayer}
-        onBuffer={onBuffer}
-        onError={videoError}
-        style={styles.mediaPlayer}
-        resizeMode="cover"
-        automaticallyWaitsToMinimizeStalling={false}
-        paused={index !== selectedIndex}
-        repeat={true}
-      />
+      <View style={{flex: 1}}>
+        <Spinner
+          visible={isLoading && !isError}
+          textContent={'Loading...'}
+          textStyle={styles.spinnerTextStyle}
+        />
+        <Video
+          key={item.id}
+          source={{
+            uri: item.url,
+          }}
+          ref={videoPlayer}
+          onBuffer={onBuffer}
+          onError={data => videoError(data, index)}
+          style={styles.mediaPlayer}
+          resizeMode="contain"
+          automaticallyWaitsToMinimizeStalling={false}
+          paused={index !== selectedIndex}
+          onEnd={handleOnloadEnd}
+          repeat={true}
+          onProgress={handleProgress}
+          onLoad={data => handleOnload(data, index)}
+          onLoadStart={() => handleOnloadStart(index)}
+        />
+        {isError && (
+          <View style={styles.viewError}>
+            <Text style={styles.errorText}>Cannot load this video</Text>
+          </View>
+        )}
+      </View>
     );
   };
 
+  console.log('selected index', selectedIndex);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Carousel
-          layout={'default'}
-          windowSize={1}
-          ref={carousel}
-          data={carouselItems}
-          sliderHeight={height}
-          itemHeight={height}
-          sliderWidth={width}
-          itemWidth={width}
-          vertical={true}
-          renderItem={renderItem}
-          onSnapToItem={setSelectedIndex}
-          enableMomentum={true}
-          decelerationRate={0.9}
-        />
-      </View>
-    </SafeAreaView>
+    <SafeAreaInsetsContext.Consumer>
+      {insets => {
+        let videoHeight = height;
+        if (insets) {
+          videoHeight = height - (insets?.top + insets?.bottom);
+        }
+        return (
+          <View style={styles.container}>
+            <Carousel
+              layout={'default'}
+              ref={carousel}
+              data={carouselItems}
+              sliderHeight={videoHeight}
+              itemHeight={videoHeight}
+              sliderWidth={width}
+              itemWidth={width}
+              vertical={true}
+              renderItem={renderItem}
+              onSnapToItem={setSelectedIndex}
+              enableMomentum={true}
+              decelerationRate={0.9}
+            />
+          </View>
+        );
+      }}
+    </SafeAreaInsetsContext.Consumer>
   );
 };
 
@@ -106,7 +202,19 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#333',
   },
-  safeArea: {flex: 1, backgroundColor: 'rebeccapurple'},
+  safeArea: {flex: 1, backgroundColor: '#333'},
+  viewError: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 20,
+  },
+  spinnerTextStyle: {
+    color: '#FFF',
+  },
 });
 
 export default App;
