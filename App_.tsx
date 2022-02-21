@@ -17,60 +17,71 @@ import images from './assets/images';
 type VideoItem = {
   id: number;
   url: string;
+  title?: string;
 };
 
 const carouselItems: VideoItem[] = [
   // HLS
   {
     id: 1,
+    title: 'HLS - manifest(format=m3u8-aapl)',
     url: 'https://aiapoc-aase.streaming.media.azure.net/7705433b-ae8c-4393-84f4-d92d83f2c208/VID_20220130_123824.ism/manifest(format=m3u8-aapl)',
   },
   {
     id: 2,
+    title: 'HLS - manifest(format=m3u8-cmaf)',
     url: 'https://aiapoc-aase.streaming.media.azure.net/7705433b-ae8c-4393-84f4-d92d83f2c208/VID_20220130_123824.ism/manifest(format=m3u8-cmaf)',
   },
   // Dash
   {
     id: 3,
+    title: 'Dash - manifest(format=mpd-time-csf)',
     url: 'https://aiapoc-aase.streaming.media.azure.net/7705433b-ae8c-4393-84f4-d92d83f2c208/VID_20220130_123824.ism/manifest(format=mpd-time-csf)',
   },
   {
     id: 4,
+    title: 'Dash - manifest(format=mpd-time-cmaf)',
     url: 'https://aiapoc-aase.streaming.media.azure.net/7705433b-ae8c-4393-84f4-d92d83f2c208/VID_20220130_123824.ism/manifest(format=mpd-time-cmaf)',
   },
   // SmoothStreaming
   {
     id: 5,
+    title: 'SmoothStreaming - manifest(format=mpd-time-csf)',
     url: 'https://aiapoc-aase.streaming.media.azure.net/7705433b-ae8c-4393-84f4-d92d83f2c208/VID_20220130_123824.ism/manifest',
   },
   // HLS
   {
     id: 6,
+    title: 'HLS - manifest(format=m3u8-aapl)',
     url: 'https://aiapoc-aase.streaming.media.azure.net/ab4a57df-80bb-46ec-b3cb-55664ac57329/VID_20220208_161937.ism/manifest(format=m3u8-aapl)',
   },
   {
     id: 7,
+    title: 'HLS - manifest(format=m3u8-cmaf)',
     url: 'https://aiapoc-aase.streaming.media.azure.net/ab4a57df-80bb-46ec-b3cb-55664ac57329/VID_20220208_161937.ism/manifest(format=m3u8-cmaf)',
   },
   // Dash
   {
     id: 8,
+    title: 'Dash - manifest(format=mpd-time-csf)',
     url: 'https://aiapoc-aase.streaming.media.azure.net/ab4a57df-80bb-46ec-b3cb-55664ac57329/VID_20220208_161937.ism/manifest(format=mpd-time-csf)',
   },
   {
     id: 9,
+    title: 'Dash - manifest(format=mpd-time-cmaf)',
     url: 'https://aiapoc-aase.streaming.media.azure.net/ab4a57df-80bb-46ec-b3cb-55664ac57329/VID_20220208_161937.ism/manifest(format=mpd-time-cmaf)',
   },
   // SmoothStreaming
   {
     id: 10,
+    title: 'SmoothStreaming - manifest(format=mpd-time-csf)',
     url: 'https://aiapoc-aase.streaming.media.azure.net/ab4a57df-80bb-46ec-b3cb-55664ac57329/VID_20220208_161937.ism/manifest',
   },
 ];
 const tmp = Dimensions.get('screen');
 const {width, height} = tmp;
 
-const App = () => {
+const App111 = () => {
   const videoPlayer = useRef<Video>(null);
   const carousel = useRef<Carousel<string>>(null);
   const [playIndex, setPlayIndex] = useState<number>(0);
@@ -141,6 +152,9 @@ const App = () => {
 
     return (
       <View style={{flex: 1}}>
+        <View style={styles.viewTitle}>
+          <Text style={styles.errorText}>{item.title}</Text>
+        </View>
         <Video
           key={isReload ? `${item.id}-reloaded` : item.id}
           source={{
@@ -150,7 +164,7 @@ const App = () => {
           onBuffer={e => onBuffer(e, index)}
           onError={data => videoError(data, index)}
           style={styles.mediaPlayer}
-          resizeMode="contain"
+          resizeMode="cover"
           automaticallyWaitsToMinimizeStalling={false}
           paused={isPause}
           onEnd={handleOnloadEnd}
@@ -158,6 +172,7 @@ const App = () => {
           onProgress={data => handleProgress(data, index)}
           onLoad={data => handleOnload(data, index)}
           onLoadStart={() => handleOnloadStart(index)}
+          muted={true}
         />
         {isError && (
           <View style={styles.viewError}>
@@ -223,6 +238,15 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
+  viewTitle: {
+    position: 'absolute',
+    zIndex: 100,
+    top: Platform.OS === 'android' ? 20 : 60,
+    left: 10,
+    backgroundColor: '#00000',
+    height: 40,
+    alignItems: 'center',
+  },
   container: {flex: 1, flexDirection: 'row', justifyContent: 'center'},
   contentContainer: {
     flex: 1,
@@ -232,7 +256,7 @@ const styles = StyleSheet.create({
   mediaPlayer: {
     height: '100%',
     width: '100%',
-    backgroundColor: '#333',
+    backgroundColor: 'white',
   },
   safeArea: {flex: 1, backgroundColor: '#333'},
   viewError: {
