@@ -1,18 +1,10 @@
+import {uniq} from 'lodash';
 import React, {useCallback, useRef, useState} from 'react';
-import {
-  Dimensions,
-  Image,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {Dimensions, Platform, StyleSheet, Text, View} from 'react-native';
 import {SafeAreaInsetsContext} from 'react-native-safe-area-context';
 import Carousel from 'react-native-snap-carousel';
 import Video, {LoadError, OnBufferData} from 'react-native-video';
-import Spinner from 'react-native-loading-spinner-overlay';
-import images from './assets/images';
+import VideoPlayer from 'react-native-video-controls';
 
 type VideoItem = {
   id: number;
@@ -23,14 +15,14 @@ type VideoItem = {
 const carouselItems: VideoItem[] = [
   // HLS
   {
-    id: 102,
-    title: 'HLS - manifest(format=m3u8-aapl)',
-    url: 'http://amssamples.streaming.mediaservices.windows.net/91492735-c523-432b-ba01-faba6c2206a2/AzureMediaServicesPromo.ism/manifest(format=m3u8-aapl)',
-  },
-  {
     id: 100,
     title: 'HLS - manifest(format=m3u8-aapl)',
     url: 'https://multiplatform-f.akamaihd.net/i/multi/will/bunny/big_buck_bunny_,640x360_400,640x360_700,640x360_1000,950x540_1500,.f4v.csmil/master.m3u8',
+  },
+  {
+    id: 102,
+    title: 'HLS - manifest(format=m3u8-aapl)',
+    url: 'http://amssamples.streaming.mediaservices.windows.net/91492735-c523-432b-ba01-faba6c2206a2/AzureMediaServicesPromo.ism/manifest(format=m3u8-aapl)',
   },
   {
     id: 110,
@@ -95,27 +87,22 @@ const carouselItems: VideoItem[] = [
 ];
 const tmp = Dimensions.get('screen');
 const {width, height} = tmp;
+const isAndroid = Platform.OS === 'android';
 
 const App = () => {
   const videoPlayer = useRef<Video>(null);
   const carousel = useRef<Carousel<string>>(null);
   const [playIndex, setPlayIndex] = useState<number>(0);
-  const [isLoadingIndex, setIdLoadingIndex] = useState<boolean[]>([]);
   const [reloadIndex, setReloadIndex] = useState<number>(-1);
-  const [errors, setErrors] = useState<boolean[]>([]);
+  const errors = useRef<number[]>([]);
 
   const onBuffer = (e: OnBufferData, index: number) => {
     console.log('onBuffer -> index', index, e);
   };
-  const videoError = useCallback(
-    (e: LoadError, index: number) => {
-      console.log('videoError -> index', index, e);
-      const cloneErrors = [...errors];
-      cloneErrors[index] = true;
-      setErrors(cloneErrors);
-    },
-    [errors],
-  );
+  const videoError = (e: LoadError, index: number) => {
+    console.log('videoError -> index', index, errors);
+    errors.current = uniq([...errors.current, index]);
+  };
 
   const handleProgress = useCallback((data, index) => {
     console.log('handleProgress -> index', index, data);
@@ -124,101 +111,75 @@ const App = () => {
       data.currentTime > 0 &&
       data.currentTime < data.seekableDuration
     ) {
-      console.log('handleProgress -> error');
+      console.log('handleProgress -> error -> index', index);
       setReloadIndex(index);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleOnload = useCallback((data, index) => {
-    console.log('handleOnload -> data', data);
-    const cloneIsLoadingIndex = [...isLoadingIndex];
-    cloneIsLoadingIndex[index] = false;
-    setIdLoadingIndex(cloneIsLoadingIndex);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    console.log('handleOnload -> index', index);
   }, []);
 
-  const handleOnloadStart = useCallback(
-    (index: number) => {
-      console.log('handleOnloadStart -> index', index, isLoadingIndex);
-      const cloneIsLoadingIndex = [...isLoadingIndex];
-      cloneIsLoadingIndex[index] = true;
-      setIdLoadingIndex(cloneIsLoadingIndex);
-    },
-    [isLoadingIndex],
-  );
+  const handleOnloadStart = useCallback((index: number) => {
+    console.log('handleOnloadStart -> index', index);
+  }, []);
 
   const handleOnloadEnd = useCallback(() => {
     console.log('handleOnloadEnd -> data');
   }, []);
 
-  const onVideoPlayPauseClicked = (index: number) => {
-    console.log('onVideoPlayPauseClicked', index, playIndex);
-    setPlayIndex(playIndex === index ? -1 : index);
-  };
-
   const renderItem = ({item, index}) => {
-    const isLoading = isLoadingIndex[index];
-    const isError = errors[index];
+    const isError = errors.current?.some(idx => idx === index);
     const isReload = reloadIndex === index;
     const isPause = playIndex !== index;
 
-    console.log('render item', reloadIndex, playIndex);
+    console.log('render item -> index', index);
+    console.log('render item -> errors', errors, isError);
 
     return (
       <View style={{flex: 1}}>
         <View style={styles.viewTitle}>
           <Text style={styles.errorText}>{item.title}</Text>
         </View>
-        <Video
-          key={isReload ? `${item.id}-reloaded` : item.id}
-          source={{
-            uri: item.url,
-            type: 'm3u8',
-          }}
-          ref={videoPlayer}
-          onBuffer={e => onBuffer(e, index)}
-          onError={data => videoError(data, index)}
-          style={styles.mediaPlayer}
-          resizeMode="cover"
-          automaticallyWaitsToMinimizeStalling={false}
-          paused={isPause}
-          onEnd={handleOnloadEnd}
-          repeat={true}
-          onProgress={data => handleProgress(data, index)}
-          onLoad={data => handleOnload(data, index)}
-          onLoadStart={() => handleOnloadStart(index)}
-          muted={true}
-        />
-        {isError && (
+        {!isError ? (
+          <VideoPlayer
+            key={isReload ? `${item.id}-reloaded` : item.id}
+            source={{
+              uri: item.url,
+              type: 'm3u8',
+            }}
+            ref={videoPlayer}
+            onBuffer={(e: OnBufferData) => onBuffer(e, index)}
+            onError={(data: LoadError) => videoError(data, index)}
+            videoStyle={styles.mediaPlayer}
+            resizeMode="cover"
+            automaticallyWaitsToMinimizeStalling={false}
+            paused={isPause}
+            onEnd={handleOnloadEnd}
+            repeat={true}
+            onProgress={(data: VideoItem) => handleProgress(data, index)}
+            onLoad={(data: VideoItem) => handleOnload(data, index)}
+            onLoadStart={() => handleOnloadStart(index)}
+            muted={true}
+            style={styles.controlView}
+            tapAnywhereToPause={true}
+            disableVolume={true}
+            disableBack={true}
+            disableFullscreen={true}
+            ignoreSilentSwitch={'ignore'}
+          />
+        ) : (
           <View style={styles.viewError}>
             <Text style={styles.errorText}>Cannot load this video</Text>
           </View>
         )}
-        <Spinner
-          visible={(isLoading && !isError) || isReload}
-          textContent={'Loading...'}
-          textStyle={styles.spinnerTextStyle}
-        />
-        <TouchableOpacity
-          onPress={() => onVideoPlayPauseClicked(index)}
-          style={[
-            Platform.OS === 'ios'
-              ? styles.viewBtnPlay
-              : styles.viewBtnPlayAndroid,
-          ]}>
-          {isPause ? (
-            <Image
-              source={images.playBtn}
-              resizeMode="contain"
-              style={styles.iconPlay}
-            />
-          ) : (
-            <View />
-          )}
-        </TouchableOpacity>
       </View>
     );
+  };
+
+  const onSnapToItem = (index: number) => {
+    console.log('onSnapToItem -> index', index);
+    setPlayIndex(index);
   };
 
   return (
@@ -240,11 +201,16 @@ const App = () => {
               itemWidth={width}
               vertical={true}
               renderItem={renderItem}
-              onSnapToItem={setPlayIndex}
-              enableMomentum={true}
-              lockScrollWhileSnapping={true}
+              onSnapToItem={onSnapToItem}
               inactiveSlideOpacity={1}
               inactiveSlideScale={1}
+              inactiveSlideShift={0}
+              removeClippedSubviews={false}
+              lockScrollWhileSnapping={isAndroid}
+              disableIntervalMomentum
+              enableSnap
+              enableMomentum={false}
+              decelerationRate={'fast'}
             />
           </View>
         );
@@ -260,9 +226,11 @@ const styles = StyleSheet.create({
     top: Platform.OS === 'android' ? 20 : 60,
     left: 10,
     backgroundColor: '#00000',
-    height: 40,
+    height: 100,
     alignItems: 'center',
+    paddingHorizontal: 10,
   },
+  controlView: {paddingBottom: 40},
   container: {flex: 1, flexDirection: 'row', justifyContent: 'center'},
   contentContainer: {
     flex: 1,
@@ -272,7 +240,7 @@ const styles = StyleSheet.create({
   mediaPlayer: {
     height: '100%',
     width: '100%',
-    backgroundColor: 'white',
+    backgroundColor: '#333',
   },
   safeArea: {flex: 1, backgroundColor: '#333'},
   viewError: {
@@ -283,6 +251,8 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     justifyContent: 'space-around',
+    paddingBottom: 75,
+    backgroundColor: '#333',
   },
   errorText: {
     color: 'red',
